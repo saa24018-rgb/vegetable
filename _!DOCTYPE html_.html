@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>吹奏楽楽器図鑑 & 練習ツール</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #ffffff;
+            color: #000000;
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+        }
+        .instrument-name {
+            color: #1d4ed8; /* Blue-700 */
+        }
+        .description-text {
+            color: #000000;
+        }
+        .glass-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .active-tab {
+            border-bottom: 3px solid #1d4ed8;
+            color: #1d4ed8;
+        }
+        .tuner-dial {
+            transition: transform 0.1s ease-out;
+        }
+        .category-label {
+            font-size: 0.75rem;
+            font-weight: bold;
+            padding: 0.1rem 0.5rem;
+            border-radius: 9999px;
+            display: inline-block;
+            margin-bottom: 0.5rem;
+        }
+        .practice-table th {
+            background-color: #f3f4f6;
+            text-align: left;
+            padding: 8px;
+            font-size: 0.875rem;
+        }
+        .practice-table td {
+            padding: 8px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-20">
+
+    <!-- Header -->
+    <header class="sticky top-0 z-10 bg-white border-b border-gray-200 p-4">
+        <h1 class="text-2xl font-bold text-center instrument-name">吹奏楽・オーケストラ練習アシスタント</h1>
+    </header>
+
+    <main class="max-w-4xl mx-auto p-4">
+        
+        <!-- Tab Navigation -->
+        <div class="flex border-b border-gray-200 mb-6">
+            <button id="tab-info" class="flex-1 py-3 font-bold active-tab" onclick="switchTab('info')">楽器情報</button>
+            <button id="tab-tool" class="flex-1 py-3 font-bold text-gray-500" onclick="switchTab('tool')">チューナー/メトロノーム</button>
+            <button id="tab-record" class="flex-1 py-3 font-bold text-gray-500" onclick="switchTab('record')">録音・録画</button>
+        </div>
+
+        <!-- Instrument Info Section -->
+        <section id="section-info">
+            <div class="space-y-8 mb-8">
+                <!-- Woodwind -->
+                <div>
+                    <span class="category-label bg-green-100 text-green-700">木管楽器</span>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <button onclick="showInstrument('flute')" class="p-3 border rounded-lg hover:bg-blue-50 transition instrument-name font-semibold text-sm md:text-base flex flex-col items-center gap-1">
+                            <span class="text-2xl">🌬️</span>フルート
+                        </button>
+                        <button onclick="showInstrument('clarinet')" class="p-3 border rounded-lg hover:bg-blue-50 transition instrument-name font-semibold text-sm md:text-base flex flex-col items-center gap-1">
+                            <span class="text-2xl">🥢</span>クラリネット
+                        </button>
+                        <button onclick="showInstrument('alto-sax')" class="p-3 border rounded-lg hover:bg-blue-50 transition instrument-name font-semibold text-sm md:text-base flex flex-col items-center gap-1">
+                            <span class="text-2xl">🎷</span>アルトサックス
+                        </button>
+                        <button onclick="showInstrument('tenor-sax')" class="p-3 border rounded-lg hover:bg-blue-50 transition instrument-name font-semibold text-sm md:text-base flex flex-col items-center gap-1">
+                            <span class="text-2xl">🎷</span>テナーサックス
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Brass -->
+                <div>
+                    <span class="category-label bg-yellow-100 text-yellow-700">金管楽器</span>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <button onclick="showInstrument('trumpet')" class="p-3 border rounded-lg hover:bg-blue-50 transition instrument-name font-semibold text-sm md:text-base flex flex-col items-center gap-1">
+                            <span class="text-2xl">🎺</span>トランペット
+                        </button>
+                        <button onclick="showInstrument('horn')" class="p-3 border rounded-lg hover:bg-blue-50 transition instrument-name font-semibold text-sm md:text-base flex flex-col items-center gap-1">
+                            <span class="text-2xl">📯</span>ホルン
+                        </button>
+                        <button onclick="showInstrument('trombone')" class="p-3 border rounded-lg hover:bg-blue-50 transition instrument-name font-semibold text-sm md:text-base flex flex-col items-center gap-1">
+                            <span class="text-2xl">📏</span>トロンボーン
+                        </button>
+                        <button onclick="showInstrument('euphonium')" class="p-3 border rounded-lg hover:bg-blue-50 transition instrument-name font-semibold text-sm md:text-base flex flex-col items-center gap-1">
+                            <span class="text-2xl">🧸</span>ユーフォニアム
+                        </button>
+                        <button onclick="showInstrument('tuba')" class="p-3 border rounded-lg hover:bg-blue-50 transition instrument-name font-semibold text-sm md:text-base flex flex-col items-center gap-1">
+                            <span class="text-2xl">🐘</span>チューバ
+                        </button>
+                    </div>
+                </div>
+
+                <!-- String -->
+                <div>
+                    <span class="category-label bg-blue-100 text-blue-700">弦楽器</span>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <button onclick="showInstrument('violin')" class="p-3 border rounded-lg hover:bg-blue-50 transition instrument-name font-semibold text-sm md:text-base flex flex-col items-center gap-1">
+                            <span class="text-2xl">🎻</span>ヴァイオリン
+                        </button>
+                        <button onclick="showInstrument('cello')" class="p-3 border rounded-lg hover:bg-blue-50 transition instrument-name font-semibold text-sm md:text-base flex flex-col items-center gap-1">
+                            <span class="text-2xl">🎻</span>チェロ
+                        </button>
+                        <button onclick="showInstrument('contrabass')" class="p-3 border rounded-lg hover:bg-blue-50 transition instrument-name font-semibold text-sm md:text-base flex flex-col items-center gap-1">
+                            <span class="text-2xl">🎻</span>コントラバス
+                        </button>
+                        <button onclick="showInstrument('harp')" class="p-3 border rounded-lg hover:bg-blue-50 transition instrument-name font-semibold text-sm md:text-base flex flex-col items-center gap-1">
+                            <span class="text-2xl">👼</span>ハープ
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Percussion -->
+                <div>
+                    <span class="category-label bg-red-100 text-red-700">打楽器</span>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <button onclick="showInstrument('drums')" class="p-3 border rounded-lg hover:bg-blue-50 transition instrument-name font-semibold text-sm md:text-base flex flex-col items-center gap-1">
+                            <span class="text-2xl">🥁</span>ドラムセット
+                        </button>
+                        <button onclick="showInstrument('glocken')" class="p-3 border rounded-lg hover:bg-blue-50 transition instrument-name font-semibold text-sm md:text-base flex flex-col items-center gap-1">
+                            <span class="text-2xl">✨</span>グロッケン
+                        </button>
+                        <button onclick="showInstrument('marimba')" class="p-3 border rounded-lg hover:bg-blue-50 transition instrument-name font-semibold text-sm md:text-base flex flex-col items-center gap-1">
+                            <span class="text-2xl">🎹</span>マリンバ
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="details-container" class="hidden glass-card rounded-xl p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <span id="display-icon" class="text-4xl"></span>
+                    <h2 id="display-name" class="text-3xl font-bold instrument-name underline decoration-blue-200">楽器名</h2>
+                </div>
+                
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="font-bold text-lg mb-1 border-l-4 border-blue-500 pl-2 text-blue-800">独自の特徴・違い</h3>
+                        <p id="display-unique" class="description-text leading-relaxed whitespace-pre-wrap font-bold bg-blue-50 p-3 rounded-lg border border-blue-100"></p>
+                    </div>
+                    
+                    <!-- Practice Log Table -->
+                    <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                        <h3 class="font-bold text-lg mb-3 border-l-4 border-green-500 pl-2 text-green-800">練習記録</h3>
+                        <div class="overflow-x-auto mb-4">
+                            <table class="w-full practice-table border-collapse">
+                                <thead>
+                                    <tr>
+                                        <th class="w-1/4">日付</th>
+                                        <th class="w-1/2">練習内容</th>
+                                        <th class="w-1/4 text-center">自己評価</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="practice-list">
+                                    <!-- Log entries go here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Log Form -->
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-2 text-sm">
+                            <input type="date" id="log-date" class="border rounded p-2 focus:ring-1 focus:ring-blue-500 outline-none">
+                            <input type="text" id="log-content" placeholder="例：ロングトーン、Cメジャー" class="md:col-span-2 border rounded p-2 focus:ring-1 focus:ring-blue-500 outline-none">
+                            <div class="flex gap-1">
+                                <select id="log-rating" class="flex-1 border rounded p-2 bg-white">
+                                    <option value="5">★★★★★</option>
+                                    <option value="4">★★★★☆</option>
+                                    <option value="3">★★★☆☆</option>
+                                    <option value="2">★★☆☆☆</option>
+                                    <option value="1">★☆☆☆☆</option>
+                                </select>
+                                <button onclick="addLog()" class="bg-blue-600 text-white px-3 py-2 rounded font-bold hover:bg-blue-700">追加</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="font-bold text-lg mb-1 border-l-4 border-blue-500 pl-2">おすすめの楽曲</h3>
+                        <p id="display-songs" class="description-text leading-relaxed whitespace-pre-wrap italic bg-gray-50 p-3 rounded-lg"></p>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg mb-1 border-l-4 border-blue-500 pl-2">どんな楽器？</h3>
+                        <p id="display-about" class="description-text leading-relaxed whitespace-pre-wrap"></p>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg mb-1 border-l-4 border-blue-500 pl-2">お手入れ・練習のコツ</h3>
+                        <p id="display-maintenance" class="description-text leading-relaxed whitespace-pre-wrap"></p>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg mb-1 border-l-4 border-blue-500 pl-2">一般的な音域と特徴</h3>
+                        <p id="display-range" class="description-text leading-relaxed font-mono bg-gray-50 p-2 rounded"></p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="placeholder-text" class="text-center py-20 text-gray-400">
+                楽器の名前を押すと詳細が表示されます
+            </div>
+        </section>
+
+        <!-- Tools Section -->
+        <section id="section-tool" class="hidden space-y-6">
+            <div class="glass-card rounded-xl p-6">
+                <h2 class="text-xl font-bold mb-4 instrument-name flex items-center gap-2">
+                    <span class="text-2xl">⏱️</span> メトロノーム
+                </h2>
+                <div class="text-center">
+                    <div id="metro-display" class="text-6xl font-black mb-4">120</div>
+                    <input type="range" id="tempo-range" min="40" max="240" value="120" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mb-6" oninput="updateTempo(this.value)">
+                    <div class="flex justify-center gap-4">
+                        <button onclick="changeTempo(-1)" class="w-12 h-12 rounded-full border border-blue-500 text-blue-500 text-2xl font-bold">-</button>
+                        <button id="metro-toggle" onclick="toggleMetronome()" class="bg-blue-600 text-white px-10 py-2 rounded-full font-bold hover:bg-blue-700 transition text-xl">START</button>
+                        <button onclick="changeTempo(1)" class="w-12 h-12 rounded-full border border-blue-500 text-blue-500 text-2xl font-bold">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card rounded-xl p-6">
+                <h2 class="text-xl font-bold mb-4 instrument-name flex items-center gap-2">
+                    <span class="text-2xl">🎵</span> チューナー
+                </h2>
+                <div class="text-center">
+                    <button id="tuner-start" onclick="toggleTuner()" class="mb-4 bg-gray-100 px-4 py-2 rounded-lg text-sm font-semibold">マイクを起動する</button>
+                    <div id="tuner-note" class="text-7xl font-bold text-blue-600 mb-2">--</div>
+                    <div id="tuner-freq" class="text-gray-500 mb-4">0.00 Hz</div>
+                    <div class="relative w-full h-8 bg-gray-100 rounded-full overflow-hidden">
+                        <div id="tuner-indicator" class="absolute left-1/2 top-0 bottom-0 w-1 bg-blue-600 tuner-dial" style="transform: translateX(-50%) rotate(0deg);"></div>
+                        <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-red-400 opacity-50" style="transform: translateX(-50%);"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recording Section -->
+        <section id="section-record" class="hidden">
+            <div class="glass-card rounded-xl p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold instrument-name">練習レコーダー</h2>
+                    <button id="camera-toggle" onclick="toggleCamera()" class="text-sm bg-gray-100 px-3 py-1 rounded-full font-semibold hover:bg-gray-200 transition">
+                        📷 カメラを起動する
+                    </button>
+                </div>
+                
+                <div class="relative bg-black rounded-lg overflow-hidden mb-4 aspect-video flex items-center justify-center">
+                    <div id="camera-off-overlay" class="text-white text-center">
+                        <span class="text-4xl mb-2 block">🚫</span>
+                        <p class="text-sm text-gray-400">カメラはオフです</p>
+                    </div>
+                    <video id="preview" autoplay muted class="hidden w-full h-full object-cover"></video>
+                    <div id="recording-indicator" class="hidden absolute top-4 right-4 flex items-center gap-2 bg-red-600 text-white px-3 py-1 rounded-full animate-pulse">
+                        <span class="w-2 h-2 bg-white rounded-full"></span> REC
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-4 justify-center">
+                    <button id="start-btn" onclick="startRecording()" class="bg-blue-600 text-white px-6 py-2 rounded-full font-bold hover:bg-blue-700 transition">
+                        録画・録音開始
+                    </button>
+                    <button id="stop-btn" onclick="stopRecording()" disabled class="bg-gray-400 text-white px-6 py-2 rounded-full font-bold transition">
+                        停止
+                    </button>
+                </div>
+
+                <div id="download-container" class="mt-8 hidden border-t pt-6">
+                    <h3 class="font-bold mb-3">録画済みファイル:</h3>
+                    <video id="recording" controls class="w-full rounded-lg mb-4"></video>
+                    <a id="download-link" class="inline-block bg-green-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-green-700 transition text-center w-full sm:w-auto">
+                        動画を保存する
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const instruments = {
+            'trumpet': { icon: '🎺', name: 'トランペット', unique: '音がまっすぐ遠くまで飛ぶ特性があり、ピストンによる高速パッセージが可能です。', songs: '・アルメニアン・ダンス Part I\n・ハイドン：トランペット協奏曲', about: '金管楽器の王道。輝かしい高音が特徴。', maintenance: '水分を抜き、バルブオイルを定期的に差します。', range: 'F#3 〜 C6', logs: [] },
+            'horn': { icon: '📯', name: 'ホルン', unique: 'ベルが後ろ向き。世界一難しい楽器として知られます。', songs: '・たなばた\n・モーツァルト：ホルン協奏曲第4番', about: '柔らかな中音域から鋭い強奏までこなす円錐管楽器。', maintenance: '複雑な管体のため、管を回して水分を抜きます。', range: '約4オクターブ', logs: [] },
+            'alto-sax': { icon: '🎷', name: 'アルトサックス', unique: '木管の指使いと金管のパワーを併せ持つハイブリッド。', songs: '・宝島\n・グラズノフ：サクソフォン協奏曲', about: '人間の歌声に近い表現力を持つ万能な主役。', maintenance: '演奏後は必ずスワブを通しタンポの水分を除去。', range: 'Bb3 〜 F#6', logs: [] },
+            'tenor-sax': { icon: '🎷', name: 'テナーサックス', unique: '深く渋い音色が特徴。対旋律で厚みを作ります。', songs: '・アフリカン・シンフォニー\n・テイク・ファイブ', about: 'サックスセクションの力強さの源となる中音域の柱。', maintenance: '大きなリードを使うため、湿り具合に注意。', range: 'Bb3 〜 F#6', logs: [] },
+            'clarinet': { icon: '🥢', name: 'クラリネット', unique: '12度上がる特殊な倍音構造を持ち、広い音域で音色が変わります。', songs: '・ラプソディ・イン・ブルー\n・モーツァルト：クラリネット五重奏曲', about: '木製（グラナディラ）のシングルリード楽器。温かな低音が魅力。', maintenance: '木製のため急激な温度変化・乾燥で管が割れる恐れあり。', range: 'E3 〜 G6', logs: [] },
+            'flute': { icon: '🌬️', name: 'フルート', unique: '唯一のエアリード楽器。移調楽器ではなく実音(C)で読みます。', songs: '・星条旗よ永遠なれ\n・牧神の午後への前奏曲', about: '鳥のさえずりのような軽やかで美しい高音が魅力。', maintenance: '反射板の位置を掃除棒で定期チェック。', range: 'C4 〜 C7以上', logs: [] },
+            'trombone': { icon: '📏', name: 'トロンボーン', unique: 'スライドによる無段階の音程変化と美しいハーモニーが特徴。', songs: '・76本のトロンボーン\n・ダヴィッド：トロンボーン協奏曲', about: 'ピストンがなく最も純粋な和音を作れる楽器。', maintenance: 'スライドは非常に繊細。専用オイルでスムーズに。', range: 'E2 〜 Bb4', logs: [] },
+            'euphonium': { icon: '🧸', name: 'ユーフォニアム', unique: '包み込むような柔らかい音色。対旋律の花形です。', songs: '・ディスコ・キッド\n・スパーク：パントマイム', about: '金管楽器の中低音を担当する歌心あふれる楽器。', maintenance: '水分が溜まりやすいため、こまめに抜きましょう。', range: 'Bb1 〜 Bb4', logs: [] },
+            'tuba': { icon: '🐘', name: 'チューバ', unique: '合奏全体を支えるピッチの基準。圧倒的なサウンドの土台。', songs: '・展覧会の絵「ビドロ」\n・ヴォーン・ウィリアムズ：テューバ協奏曲', about: '吹奏楽で最も大きく、低い音を担当する大黒柱。', maintenance: '重いため衝撃に注意。定期的な管内洗浄を推奨。', range: 'D1 〜 Bb3付近', logs: [] },
+            'violin': { icon: '🎻', name: 'ヴァイオリン', unique: '息継ぎ不要な持続音と超高速連符。圧倒的なオーケストラの主役。', songs: '・カノン\n・メンデルスゾーン：ヴァイオリン協奏曲', about: '表現力が極めて高く、優雅な旋律から技巧まで。', maintenance: '松脂はすぐ拭き取る。湿度管理が重要。', range: 'G3 〜 E7以上', logs: [] },
+            'cello': { icon: '🎻', name: 'チェロ', unique: '人間の声に最も近い音域。体に直接伝わる振動が魅力。', songs: '・無伴奏チェロ組曲\n・ドヴォルザーク：チェロ協奏曲', about: '重厚な低音から切ない高音まで歌えるソロ楽器。', maintenance: 'エンドピンの状態を確認。', range: 'C2 〜 C6以上', logs: [] },
+            'contrabass': { icon: '🎻', name: 'コントラバス', unique: 'ピチカートでリズムを刻み、吹奏楽の響きに接着剤の役割を果たす。', songs: '・動物の謝肉祭「象」\n・ボッテジーニ：コントラバス協奏曲', about: '弦楽器で最大・最低音。オーケストラやジャズに不可欠。', maintenance: '魂柱への衝撃に注意。駒の角度をチェック。', range: 'E1 〜 G4以上', logs: [] },
+            'harp': { icon: '👼', name: 'ハープ', unique: '7つのペダルで47本の弦を制御。幻想的なグリッサンド。', songs: '・花のワルツ\n・フォーレ：ハープのための即興曲', about: '優雅な外観と「天使の歌声」を持つ幻想的な多声楽器。', maintenance: '張力が強いため古い弦の断線に注意。', range: 'Cb1 〜 G#7', logs: [] },
+            'drums': { icon: '🥁', name: 'ドラムセット', unique: 'テンポとノリを支配する司令塔。両手両足を独立させます。', songs: '・シング・シング・シング\n・キャラバン', about: 'リズムの骨組みを作る楽器の集合体。', maintenance: 'ヘッドの張力を均一に保ちます。', range: '音程なし', logs: [] },
+            'glocken': { icon: '✨', name: 'グロッケンシュピール', unique: '最高音域を担当。星のようなきらめきを合奏に添えます。', songs: '・魔法使いの弟子\n・虹の彼方に', about: '鋼鉄製の音板を叩く鉄琴。高い浸透力を持つ。', maintenance: '指紋を残さないよう清掃。紐の劣化に注意。', range: 'G5 〜 C8', logs: [] },
+            'marimba': { icon: '🎹', name: 'マリンバ', unique: '深い共鳴管による暖かく豊かな響き。4本マレットでの和音奏。', songs: '・マリンバ・スピリチュアル\n・ロサウロ：マリンバ協奏曲', about: '木製鍵盤打楽器。合奏に温かみと高級感を与える。', maintenance: '木製のため湿度の急変に注意。鍵盤に物を置かない。', range: 'C2 〜 C7', logs: [] }
+        };
+
+        let currentInstrumentKey = null;
+
+        function showInstrument(key) {
+            currentInstrumentKey = key;
+            const data = instruments[key];
+            document.getElementById('display-icon').textContent = data.icon;
+            document.getElementById('display-name').textContent = data.name;
+            document.getElementById('display-unique').textContent = data.unique;
+            document.getElementById('display-songs').textContent = data.songs;
+            document.getElementById('display-about').textContent = data.about;
+            document.getElementById('display-maintenance').textContent = data.maintenance;
+            document.getElementById('display-range').textContent = data.range;
+            
+            // Set default date
+            document.getElementById('log-date').valueAsDate = new Date();
+            
+            renderLogs();
+
+            document.getElementById('placeholder-text').classList.add('hidden');
+            document.getElementById('details-container').classList.remove('hidden');
+            document.getElementById('details-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function addLog() {
+            if (!currentInstrumentKey) return;
+            const dateInput = document.getElementById('log-date');
+            const contentInput = document.getElementById('log-content');
+            const ratingInput = document.getElementById('log-rating');
+
+            if (!contentInput.value.trim()) {
+                alert("練習内容を入力してください。");
+                return;
+            }
+
+            const newLog = {
+                date: dateInput.value,
+                content: contentInput.value,
+                rating: parseInt(ratingInput.value)
+            };
+
+            instruments[currentInstrumentKey].logs.push(newLog);
+            
+            // Clear inputs
+            contentInput.value = "";
+            renderLogs();
+        }
+
+        function renderLogs() {
+            const list = document.getElementById('practice-list');
+            list.innerHTML = "";
+            const logs = instruments[currentInstrumentKey].logs;
+
+            if (logs.length === 0) {
+                list.innerHTML = '<tr><td colspan="3" class="text-center text-gray-400 py-4">まだ記録がありません</td></tr>';
+                return;
+            }
+
+            // Sort by date descending
+            const sortedLogs = [...logs].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            sortedLogs.forEach(log => {
+                const tr = document.createElement('tr');
+                const ratingStars = '★'.repeat(log.rating) + '☆'.repeat(5 - log.rating);
+                tr.innerHTML = `
+                    <td>${log.date}</td>
+                    <td class="font-medium">${log.content}</td>
+                    <td class="text-center text-yellow-500">${ratingStars}</td>
+                `;
+                list.appendChild(tr);
+            });
+        }
+
+        function switchTab(tab) {
+            const tabs = ['info', 'tool', 'record'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                const sec = document.getElementById(`section-${t}`);
+                if (t === tab) {
+                    btn.classList.add('active-tab');
+                    btn.classList.remove('text-gray-500');
+                    sec.classList.remove('hidden');
+                } else {
+                    btn.classList.remove('active-tab');
+                    btn.classList.add('text-gray-500');
+                    sec.classList.add('hidden');
+                }
+            });
+            if (tab !== 'tool') { stopMetronome(); stopTuner(); }
+            if (tab !== 'record' && isCameraOn) toggleCamera();
+        }
+
+        // --- Metronome logic ---
+        let audioCtx, metroInterval, isMetronomeRunning = false, bpm = 120;
+        function updateTempo(val) {
+            bpm = val; document.getElementById('metro-display').textContent = val;
+            if (isMetronomeRunning) { stopMetronome(); startMetronome(); }
+        }
+        function changeTempo(delta) {
+            const input = document.getElementById('tempo-range');
+            const newVal = parseInt(input.value) + delta;
+            if (newVal >= 40 && newVal <= 240) { input.value = newVal; updateTempo(newVal); }
+        }
+        function toggleMetronome() { isMetronomeRunning ? stopMetronome() : startMetronome(); }
+        function startMetronome() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            isMetronomeRunning = true;
+            document.getElementById('metro-toggle').textContent = "STOP";
+            document.getElementById('metro-toggle').classList.replace('bg-blue-600', 'bg-red-500');
+            metroInterval = setInterval(() => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine'; osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+            }, 60000 / bpm);
+        }
+        function stopMetronome() {
+            isMetronomeRunning = false; clearInterval(metroInterval);
+            document.getElementById('metro-toggle').textContent = "START";
+            document.getElementById('metro-toggle').classList.replace('bg-red-500', 'bg-blue-600');
+        }
+
+        // --- Tuner logic ---
+        let tunerStream, tunerAnalyser, tunerId;
+        async function toggleTuner() {
+            if (tunerAnalyser) { stopTuner(); document.getElementById('tuner-start').textContent = "マイクを起動する"; }
+            else { await startTuner(); document.getElementById('tuner-start').textContent = "マイクを停止する"; }
+        }
+        async function startTuner() {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                tunerStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const source = audioCtx.createMediaStreamSource(tunerStream);
+                tunerAnalyser = audioCtx.createAnalyser();
+                tunerAnalyser.fftSize = 2048; source.connect(tunerAnalyser); updateTuner();
+            } catch (err) { alert("マイクへのアクセスを許可してください"); }
+        }
+        function stopTuner() {
+            if (tunerStream) tunerStream.getTracks().forEach(t => t.stop());
+            tunerAnalyser = null; cancelAnimationFrame(tunerId);
+            document.getElementById('tuner-note').textContent = "--";
+        }
+        function updateTuner() {
+            if (!tunerAnalyser) return;
+            const buffer = new Float32Array(tunerAnalyser.fftSize);
+            tunerAnalyser.getFloatTimeDomainData(buffer);
+            const freq = autoCorrelate(buffer, audioCtx.sampleRate);
+            if (freq !== -1) {
+                const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+                const noteNum = 12 * (Math.log2(freq / 440)) + 69;
+                const roundedNote = Math.round(noteNum);
+                document.getElementById('tuner-note').textContent = notes[roundedNote % 12];
+                document.getElementById('tuner-indicator').style.transform = `translateX(-50%) rotate(${(noteNum - roundedNote) * 90}deg)`;
+            }
+            tunerId = requestAnimationFrame(updateTuner);
+        }
+        function autoCorrelate(buffer, sampleRate) {
+            let SIZE = buffer.length, rms = 0;
+            for (let i = 0; i < SIZE; i++) rms += buffer[i] * buffer[i];
+            if (Math.sqrt(rms / SIZE) < 0.01) return -1;
+            let c = new Array(SIZE).fill(0);
+            for (let i = 0; i < SIZE; i++) for (let j = 0; j < SIZE - i; j++) c[i] = c[i] + buffer[j] * buffer[j + i];
+            let d = 0; while (c[d] > c[d + 1]) d++;
+            let maxval = -1, maxpos = -1;
+            for (let i = d; i < SIZE; i++) if (c[i] > maxval) { maxval = c[i]; maxpos = i; }
+            return sampleRate / maxpos;
+        }
+
+        // --- Recording Logic ---
+        let mediaRecorder, recordedChunks = [], stream, isCameraOn = false;
+        async function toggleCamera() {
+            const btn = document.getElementById('camera-toggle');
+            const preview = document.getElementById('preview');
+            const overlay = document.getElementById('camera-off-overlay');
+            if (!isCameraOn) {
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                    preview.srcObject = stream; preview.classList.remove('hidden'); overlay.classList.add('hidden');
+                    btn.textContent = "🚫 カメラを停止する"; isCameraOn = true;
+                } catch (err) { alert("カメラへのアクセスに失敗しました。"); }
+            } else {
+                if (stream) stream.getTracks().forEach(t => t.stop());
+                preview.srcObject = null; preview.classList.add('hidden'); overlay.classList.remove('hidden');
+                btn.textContent = "📷 カメラを起動する"; isCameraOn = false; stream = null;
+            }
+        }
+        async function startRecording() {
+            if (!isCameraOn) {
+                if (confirm("カメラを起動しますか？")) { await toggleCamera(); if (!isCameraOn) return; } else return;
+            }
+            recordedChunks = [];
+            try {
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                    const url = URL.createObjectURL(blob);
+                    document.getElementById('recording').src = url;
+                    const link = document.getElementById('download-link');
+                    link.href = url; link.download = `practice_${Date.now()}.webm`;
+                    document.getElementById('download-container').classList.remove('hidden');
+                };
+                mediaRecorder.start();
+                document.getElementById('start-btn').disabled = true;
+                document.getElementById('start-btn').classList.replace('bg-blue-600', 'bg-gray-400');
+                document.getElementById('stop-btn').disabled = false;
+                document.getElementById('stop-btn').classList.replace('bg-gray-400', 'bg-red-600');
+                document.getElementById('recording-indicator').classList.remove('hidden');
+            } catch (e) { alert("録画を開始できませんでした。"); }
+        }
+        function stopRecording() {
+            if (mediaRecorder) mediaRecorder.stop();
+            document.getElementById('start-btn').disabled = false;
+            document.getElementById('start-btn').classList.replace('bg-gray-400', 'bg-blue-600');
+            document.getElementById('stop-btn').disabled = true;
+            document.getElementById('stop-btn').classList.replace('bg-red-600', 'bg-gray-400');
+            document.getElementById('recording-indicator').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
