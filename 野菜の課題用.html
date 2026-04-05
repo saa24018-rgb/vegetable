@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vegetable Growth Tracker with Charts</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: #f0fdf4;
+        }
+        .veg-card {
+            transition: transform 0.2s;
+        }
+        .veg-card:hover {
+            transform: translateY(-4px);
+        }
+        .chart-container {
+            position: relative;
+            height: 150px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-12">
+    <!-- Header -->
+    <header class="bg-green-600 text-white p-6 shadow-lg mb-8">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+                野菜の生育管理
+            </h1>
+            <button onclick="openModal()" class="bg-white text-green-600 px-4 py-2 rounded-full font-semibold hover:bg-green-50 transition shadow-md">
+                + 新しい野菜
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4">
+        <!-- Dashboard / Empty State -->
+        <div id="empty-state" class="hidden text-center py-20">
+            <div class="text-6xl mb-4">🌱</div>
+            <h2 class="text-xl text-gray-600">まだ登録されている野菜がありません</h2>
+            <p class="text-gray-500">右上のボタンから最初の野菜を登録しましょう！</p>
+        </div>
+
+        <!-- Vegetable List -->
+        <div id="veg-list" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Cards will be injected here -->
+        </div>
+    </main>
+
+    <!-- Modal for adding/editing -->
+    <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl">
+            <h2 class="text-xl font-bold mb-4 text-green-800">野菜を登録する</h2>
+            <form id="veg-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">野菜の名前</label>
+                    <input type="text" id="name" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 p-2 border" placeholder="例: トマト">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">品種</label>
+                    <input type="text" id="variety" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 p-2 border" placeholder="例: アイコ">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">植え付け日</label>
+                    <input type="date" id="plant-date" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 p-2 border">
+                </div>
+                <div class="flex gap-2 pt-4">
+                    <button type="button" onclick="closeModal()" class="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">キャンセル</button>
+                    <button type="submit" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 shadow">保存する</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let vegetables = JSON.parse(localStorage.getItem('veg_data')) || [];
+        let charts = {}; // To store chart instances
+
+        const vegList = document.getElementById('veg-list');
+        const emptyState = document.getElementById('empty-state');
+        const modal = document.getElementById('modal');
+        const vegForm = document.getElementById('veg-form');
+
+        // Render functions
+        function render() {
+            // Destroy existing charts before re-rendering cards
+            Object.values(charts).forEach(chart => chart.destroy());
+            charts = {};
+
+            if (vegetables.length === 0) {
+                emptyState.classList.remove('hidden');
+                vegList.innerHTML = '';
+            } else {
+                emptyState.classList.add('hidden');
+                vegList.innerHTML = vegetables.map((veg, index) => {
+                    const daysPassed = Math.floor((new Date() - new Date(veg.plantDate)) / (1000 * 60 * 60 * 24));
+                    return `
+                        <div class="bg-white rounded-xl shadow-md p-6 veg-card border-t-4 border-green-500 flex flex-col h-full">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 class="text-xl font-bold text-gray-800">${escapeHtml(veg.name)}</h3>
+                                    <p class="text-sm text-gray-500">${escapeHtml(veg.variety || '品種未設定')}</p>
+                                </div>
+                                <span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded-full">
+                                    ${daysPassed >= 0 ? daysPassed + '日目' : '開始前'}
+                                </span>
+                            </div>
+                            
+                            <!-- Graph Section -->
+                            <div class="mb-4 bg-gray-50 rounded-lg p-2">
+                                <div class="chart-container">
+                                    <canvas id="chart-${index}"></canvas>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3 mb-6">
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <span class="mr-2">📅</span> 植え付け: ${veg.plantDate}
+                                </div>
+                                <div class="flex flex-wrap gap-2">
+                                    <button onclick="addLog(${index}, '水やり')" class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 py-1 px-3 rounded-full border border-blue-200 transition">💧 水やり</button>
+                                    <button onclick="addLog(${index}, '追肥')" class="text-xs bg-yellow-50 hover:bg-yellow-100 text-yellow-700 py-1 px-3 rounded-full border border-yellow-200 transition">✨ 追肥</button>
+                                    <button onclick="addLog(${index}, '収穫')" class="text-xs bg-red-50 hover:bg-red-100 text-red-700 py-1 px-3 rounded-full border border-red-200 transition">🧺 収穫</button>
+                                </div>
+                            </div>
+
+                            <div class="border-t pt-4 flex-grow">
+                                <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">直近の記録</h4>
+                                <ul class="text-sm text-gray-600 space-y-1">
+                                    ${veg.logs && veg.logs.length > 0 
+                                        ? veg.logs.slice(-3).reverse().map(log => `<li><span class="text-gray-400 font-mono text-xs">${log.date}</span> ${log.action}</li>`).join('')
+                                        : '<li class="italic text-gray-400">記録なし</li>'}
+                                </ul>
+                            </div>
+
+                            <button onclick="deleteVeg(${index})" class="mt-6 text-xs text-red-400 hover:text-red-600 flex items-center gap-1 self-start">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                削除する
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+
+                // Initialize charts for each vegetable
+                vegetables.forEach((veg, index) => {
+                    initChart(index, veg.logs || []);
+                });
+            }
+        }
+
+        function initChart(index, logs) {
+            const ctx = document.getElementById(`chart-${index}`).getContext('2d');
+            
+            // Count actions
+            const counts = {
+                '水やり': 0,
+                '追肥': 0,
+                '収穫': 0
+            };
+            logs.forEach(log => {
+                if (counts[log.action] !== undefined) {
+                    counts[log.action]++;
+                }
+            });
+
+            const hasData = logs.length > 0;
+
+            charts[index] = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['水やり', '追肥', '収穫'],
+                    datasets: [{
+                        data: hasData ? [counts['水やり'], counts['追肥'], counts['収穫']] : [1],
+                        backgroundColor: hasData 
+                            ? ['#3b82f6', '#eab308', '#ef4444'] 
+                            : ['#e5e7eb'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'right',
+                            labels: {
+                                boxWidth: 10,
+                                font: { size: 10 }
+                            }
+                        },
+                        tooltip: {
+                            enabled: hasData
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+        }
+
+        // Logic functions
+        function openModal() {
+            modal.classList.remove('hidden');
+            document.getElementById('plant-date').valueAsDate = new Date();
+        }
+
+        function closeModal() {
+            modal.classList.add('hidden');
+            vegForm.reset();
+        }
+
+        function saveVeg(e) {
+            e.preventDefault();
+            const newVeg = {
+                name: document.getElementById('name').value,
+                variety: document.getElementById('variety').value,
+                plantDate: document.getElementById('plant-date').value,
+                logs: []
+            };
+            vegetables.push(newVeg);
+            saveData();
+            closeModal();
+            render();
+        }
+
+        function deleteVeg(index) {
+            if (confirm('この野菜の記録を削除してもよろしいですか？')) {
+                vegetables.splice(index, 1);
+                saveData();
+                render();
+            }
+        }
+
+        function addLog(index, action) {
+            const now = new Date();
+            const dateStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+            
+            if (!vegetables[index].logs) vegetables[index].logs = [];
+            vegetables[index].logs.push({
+                date: dateStr,
+                action: action
+            });
+            saveData();
+            render();
+        }
+
+        function saveData() {
+            localStorage.setItem('veg_data', JSON.stringify(vegetables));
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Init
+        vegForm.addEventListener('submit', saveVeg);
+        window.onload = render;
+    </script>
+</body>
+</html>
